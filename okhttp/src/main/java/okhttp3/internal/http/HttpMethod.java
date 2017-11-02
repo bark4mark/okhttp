@@ -15,6 +15,10 @@
  */
 package okhttp3.internal.http;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+
 public final class HttpMethod {
   public static boolean invalidatesCache(String method) {
     return method.equals("POST")
@@ -33,12 +37,7 @@ public final class HttpMethod {
   }
 
   public static boolean permitsRequestBody(String method) {
-    return requiresRequestBody(method)
-        || method.equals("OPTIONS")
-        || method.equals("DELETE")    // Permitted as spec is ambiguous.
-        || method.equals("PROPFIND")  // (WebDAV) without body: request <allprop/>
-        || method.equals("MKCOL")     // (WebDAV) may contain a body, but behaviour is unspecified
-        || method.equals("LOCK");     // (WebDAV) body: create lock, without body: refresh lock
+    return requiresRequestBody(method) || permitsRequestBody.contains(method);
   }
 
   public static boolean redirectsWithBody(String method) {
@@ -49,7 +48,13 @@ public final class HttpMethod {
     // All requests but PROPFIND should redirect to a GET request.
     return !method.equals("PROPFIND");
   }
+  
+  public static void addMethodThatPermitsBody(final String method) {
+    permitsRequestBody.add(method);
+  }
 
   private HttpMethod() {
   }
+  
+  private static final Set<String> permitsRequestBody = new HashSet<>(Arrays.asList("OPTIONS", "DELETE", "PROPFIND", "MKCOL", "LOCK"));
 }
